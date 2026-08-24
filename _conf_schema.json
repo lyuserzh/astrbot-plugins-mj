@@ -1,0 +1,14 @@
+{
+  "send_mj_text": {
+    "description": "触发 mj 时是否先发送文字「mj」",
+    "type": "bool",
+    "hint": "关闭后只发视频，不发文字",
+    "default": true
+  },
+  "send_isa_text": {
+    "description": "触发 isa 时是否先发送文字「isa」",
+    "type": "bool",
+    "hint": "关闭后只发图片 isa.png，不发文字",
+    "default": true
+  }
+}

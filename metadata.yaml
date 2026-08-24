@@ -1,0 +1,6 @@
+name: astrbot_plugin_mj
+display_name: 关键词自动回复
+desc: 检测到 mj / isa / 牛来 时自动回复；mj 发视频，isa 发图片；可在插件设置中开关是否发送文字
+version: 1.3.0
+author: your_name
+repo: https://github.com/your-name/astrbot_plugin_mj
