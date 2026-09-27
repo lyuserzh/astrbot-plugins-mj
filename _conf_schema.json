@@ -10,5 +10,11 @@
     "type": "bool",
     "hint": "关闭后只发图片 isa.png，不发文字",
     "default": true
+  },
+  "send_kfc_text": {
+    "description": "触发 kfc 时是否先发送文字「kfc」",
+    "type": "bool",
+    "hint": "关闭后只发炸鸡雨视频，不发文字",
+    "default": true
   }
 }
