@@ -14,9 +14,11 @@ class MJPlugin(Star):
         self.plugin_dir = os.path.dirname(os.path.abspath(__file__))
         # mj 视频
         self.mj_videos = ["mj1.mp4", "mj2.mp4"]
+        # kfc 炸鸡雨视频
+        self.kfc_videos = ["kfc1.mp4", "kfc2.mp4"]
         # isa 图片
         self.isa_image = "isa.png"
-        self._last_video: str | None = None
+        self._last_video: dict[str, str | None] = {"mj": None, "kfc": None}
         logger.info("关键词自动回复插件已加载")
 
     def _cfg_bool(self, key: str, default: bool = True) -> bool:
@@ -26,18 +28,19 @@ class MJPlugin(Star):
         except Exception:
             return default
 
-    def _pick_video(self) -> str:
+    def _pick_video(self, video_list: list[str], key: str) -> str:
         """轮流 + 随机选视频"""
         available = [
             name
-            for name in self.mj_videos
+            for name in video_list
             if os.path.isfile(os.path.join(self.plugin_dir, name))
         ]
         if not available:
             return ""
 
-        if self._last_video and len(available) > 1:
-            others = [n for n in available if n != self._last_video]
+        last = self._last_video.get(key)
+        if last and len(available) > 1:
+            others = [n for n in available if n != last]
             if others and random.random() < 0.8:
                 choice = random.choice(others)
             else:
@@ -45,7 +48,7 @@ class MJPlugin(Star):
         else:
             choice = random.choice(available)
 
-        self._last_video = choice
+        self._last_video[key] = choice
         return choice
 
     @filter.event_message_type(filter.EventMessageType.ALL)
@@ -60,8 +63,8 @@ class MJPlugin(Star):
 
         text_lower = original.lower()
 
-        # 按优先级匹配：mj / isa / 牛来
-        keywords = ["mj", "isa", "牛来"]
+        # 按优先级匹配：mj / isa / 牛来 / kskbl / kfc
+        keywords = ["mj", "isa", "牛来", "kskbl", "kfc"]
         matched_kw = None
         for kw in keywords:
             if kw.isascii():
@@ -83,9 +86,23 @@ class MJPlugin(Star):
             if self._cfg_bool("send_mj_text", True):
                 yield event.plain_result("mj")
 
-            video_name = self._pick_video()
+            video_name = self._pick_video(self.mj_videos, "mj")
             if not video_name:
                 logger.warning("没有可用的 mj 视频，请放置 mj1.mp4 / mj2.mp4")
+            else:
+                path = os.path.abspath(os.path.join(self.plugin_dir, video_name))
+                logger.info(f"发送视频: {video_name}")
+                yield event.chain_result([Comp.Video.fromFileSystem(path=path)])
+            return
+
+        # ----- kfc：可选文字 + 炸鸡雨视频 -----
+        if matched_kw == "kfc":
+            if self._cfg_bool("send_kfc_text", True):
+                yield event.plain_result("kfc")
+
+            video_name = self._pick_video(self.kfc_videos, "kfc")
+            if not video_name:
+                logger.warning("没有可用的 kfc 视频，请放置 kfc1.mp4 / kfc2.mp4")
             else:
                 path = os.path.abspath(os.path.join(self.plugin_dir, video_name))
                 logger.info(f"发送视频: {video_name}")
@@ -111,6 +128,13 @@ class MJPlugin(Star):
         # ----- 牛来：仅文字 -----
         if matched_kw == "牛来":
             yield event.plain_result("牛来")
+            return
+
+        # ----- kskbl：随机回复 wkzkbl 或 zdjd -----
+        if matched_kw == "kskbl":
+            reply = random.choice(["wkzkbl", "zdjd"])
+            logger.info(f"kskbl 随机回复: {reply}")
+            yield event.plain_result(reply)
             return
 
     async def terminate(self):
